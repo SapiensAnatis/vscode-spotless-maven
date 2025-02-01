@@ -12,7 +12,9 @@ Very work-in-progress extension for providing Spotless formatting for Maven proj
 
 ### Download
 
-Download the VSIX from the Releases page or find the extension on the Marketplace here: https://marketplace.visualstudio.com/items?itemName=SapiensAnatis.vscode-spotless-maven
+This extension isn't on the Visual Studio Marketplace -- I'll publish it if/when I think it is a bit more ready for general use.
+
+For now, you can download a VSIX from the Releases tab.
 
 ### Build from Source
 
