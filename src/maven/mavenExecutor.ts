@@ -14,7 +14,7 @@ export type MavenExecutionResult = {
   stderr: string;
 };
 
-interface MavenExecutor {
+interface MavenExecutor extends vscode.Disposable {
   runPluginGoal({
     documentLocation,
     plugin,

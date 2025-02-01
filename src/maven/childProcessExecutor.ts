@@ -6,13 +6,17 @@ import MavenExecutor, {
 import getPomPath from './getPomPath';
 import * as childProcess from 'child_process';
 import Logger from '../logger';
+import ConfigurationProvider from '../configurationProvider';
 
-class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
+class ChildProcessExecutor implements MavenExecutor {
   private activeProcess: childProcess.ChildProcess | null = null;
 
-  constructor(private logger: Logger) {}
+  constructor(
+    private configurationProvider: ConfigurationProvider,
+    private logger: Logger
+  ) {}
 
-  async runPluginGoal({
+  public async runPluginGoal({
     documentLocation,
     plugin,
     goal,
@@ -41,6 +45,13 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
     });
   }
 
+  public dispose(): void {
+    // Unsure if this is correct
+    if (this.activeProcess && this.activeProcess.exitCode === null) {
+      this.activeProcess.disconnect();
+    }
+  }
+
   private async runMaven(
     pomPath: string,
     args: string[],
@@ -48,12 +59,16 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
     options: childProcess.ExecFileOptions
   ): Promise<MavenExecutionResult> {
     return new Promise((resolve, reject) => {
+      const mvnCommand = this.configurationProvider.getUseMvnd()
+        ? this.configurationProvider.getMvndPath()
+        : 'mvn';
+
       const argsWithPom = ['-f', pomPath, ...args];
 
-      this.logger.trace('Executing maven: /usr/bin/mvn', ...argsWithPom);
+      this.logger.trace(`Executing maven: ${mvnCommand}`, ...argsWithPom);
 
       this.activeProcess = childProcess.execFile(
-        '/usr/bin/mvn',
+        mvnCommand,
         argsWithPom,
         options,
         (error, stdout, stderr) => {
@@ -67,6 +82,10 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
         }
       );
 
+      this.activeProcess.stdout?.on('data', (data) => {
+        this.logger.trace('stdout:', data);
+      });
+
       if (!this.activeProcess.stdin) {
         reject(new Error('failed to get process stdin'));
       } else {
@@ -75,13 +94,6 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
         this.logger.trace('Wrote document to Maven stdin');
       }
     });
-  }
-
-  dispose(): void {
-    // Unsure if this is correct
-    if (this.activeProcess && this.activeProcess.exitCode === null) {
-      this.activeProcess.disconnect();
-    }
   }
 }
 

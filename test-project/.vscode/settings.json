@@ -1,0 +1,4 @@
+{
+    "spotlessMaven.useMvnd": true,
+    "spotlessMaven.mvndPath": "/home/jay/.sdkman/candidates/mvnd/current/bin/mvnd"
+}

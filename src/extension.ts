@@ -4,6 +4,7 @@ import Spotless from './spotless';
 import ChildProcessExecutor from './maven/childProcessExecutor';
 import DocumentFormattingEditProvider from './documentFormattingEditProvider';
 import Logger from './logger';
+import ConfigurationProvider from './configurationProvider';
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -14,7 +15,9 @@ export async function activate(
 
   logger.info('Extension initialised');
 
-  const executor = new ChildProcessExecutor(logger);
+  const configurationProvider = new ConfigurationProvider();
+
+  const executor = new ChildProcessExecutor(configurationProvider, logger);
   const spotless = new Spotless(executor, logger);
 
   const formatDocumentSelector: vscode.DocumentFilter[] = [
@@ -32,7 +35,12 @@ export async function activate(
     documentFormattingEditProvider
   );
 
-  context.subscriptions.push(formatter, executor, logger);
+  context.subscriptions.push(
+    logger,
+    configurationProvider,
+    formatter,
+    documentFormattingEditProvider
+  );
 }
 
 export function deactivate(): void {}

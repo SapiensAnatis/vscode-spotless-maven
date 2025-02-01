@@ -14,7 +14,7 @@ const SPOTLESS_STATUSES = [
   SPOTLESS_STATUS_IS_DIRTY,
 ];
 
-class Spotless {
+class Spotless implements vscode.Disposable {
   constructor(
     private readonly mavenExecutor: MavenExecutor,
     private readonly logger: Logger
@@ -66,6 +66,10 @@ class Spotless {
     }
 
     throw new Error(trimmedStdErr || 'No status received from Spotless');
+  }
+
+  public dispose(): void {
+    this.mavenExecutor.dispose();
   }
 }
 

@@ -48,6 +48,7 @@ class DocumentFormattingEditProvider
 
   public dispose(): void {
     this.documentFormattingEditProvider?.dispose();
+    this.spotless.dispose();
   }
 }
 

@@ -18,12 +18,21 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "vscode-spotless-maven.helloWorld",
-        "title": "Hello World"
+    "configuration": {
+      "title": "Spotless for Maven",
+      "properties": {
+        "spotlessMaven.useMvnd": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use mvnd instead of mvn for faster formatting. Requires mvnd to be installed and present on your $PATH."
+        },
+        "spotlessMaven.mvndPath": {
+          "type": "string",
+          "default": "/usr/bin/mvnd",
+          "description": "Path to the mvnd executable to use."
+        }
       }
-    ]
+    }
   },
   "scripts": {
     "vsce:package": "vsce package --no-dependencies",
