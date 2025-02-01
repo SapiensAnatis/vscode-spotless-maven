@@ -4,12 +4,14 @@
   "description": "Format your source files using Spotless via Maven",
   "version": "0.0.1",
   "engines": {
-    "vscode": "1.96.0"
+    "vscode": "1.96.4"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:pom.xml"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -34,16 +36,18 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "1.96.0",
     "@types/mocha": "10.0.10",
-    "@types/node": "20.17.16",
+    "@types/node": "22.12.0",
+    "@types/vscode": "1.96.0",
     "@typescript-eslint/eslint-plugin": "8.22.0",
     "@typescript-eslint/parser": "8.22.0",
-    "eslint": "9.19.0",
+    "@vscode/test-cli": "0.0.10",
+    "@vscode/test-electron": "2.4.1",
     "esbuild": "0.24.2",
+    "eslint": "9.19.0",
     "npm-run-all": "4.1.5",
     "typescript": "5.7.3",
-    "@vscode/test-cli": "0.0.10",
-    "@vscode/test-electron": "2.4.1"
-  }
+    "prettier": "3.4.2"
+  },
+  "dependencies": {}
 }
