@@ -50,7 +50,7 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
     return new Promise((resolve, reject) => {
       const argsWithPom = ['-f', pomPath, ...args];
 
-      this.logger.debug('Executing maven: /usr/bin/mvn', ...argsWithPom);
+      this.logger.trace('Executing maven: /usr/bin/mvn', ...argsWithPom);
 
       this.activeProcess = childProcess.execFile(
         '/usr/bin/mvn',
