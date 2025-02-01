@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import MavenExecutor from './maven/mavenExecutor';
 import Spotless from './spotless';
+import Logger from './logger';
 
 class DocumentFormattingEditProvider
   implements vscode.DocumentFormattingEditProvider, vscode.Disposable
@@ -9,7 +9,8 @@ class DocumentFormattingEditProvider
 
   constructor(
     private spotless: Spotless,
-    private documentSelector: vscode.DocumentSelector
+    private documentSelector: vscode.DocumentSelector,
+    private logger: Logger
   ) {}
 
   public register(): void {
@@ -36,10 +37,11 @@ class DocumentFormattingEditProvider
         document.positionAt(0),
         document.positionAt(document.getText().length)
       );
+      this.logger.info('Formatting completed');
 
       return [new vscode.TextEdit(range, spotlessChanges)];
     } catch (e) {
-      console.error(`Unable to apply formatting: ${(e as Error).message}`);
+      this.logger.error(`Unable to apply formatting: ${(e as Error).message}`);
       return [];
     }
   }

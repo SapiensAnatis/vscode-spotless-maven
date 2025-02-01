@@ -5,9 +5,12 @@ import MavenExecutor, {
 } from './mavenExecutor';
 import getPomPath from './getPomPath';
 import * as childProcess from 'child_process';
+import Logger from '../logger';
 
 class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
   private activeProcess: childProcess.ChildProcess | null = null;
+
+  constructor(private logger: Logger) {}
 
   async runPluginGoal({
     documentLocation,
@@ -21,11 +24,11 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
     const pomUri = await getPomPath();
 
     if (!pomUri) {
-      console.log('No Maven project found.');
+      this.logger.error('No Maven project found.');
       throw new Error('No Maven project found.');
     }
 
-    console.log(`Using maven project: ${pomUri}`);
+    this.logger.info(`Using maven project: ${pomUri}`);
 
     const ac = new AbortController();
     cancellationToken.onCancellationRequested(() =>
@@ -47,15 +50,18 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
     return new Promise((resolve, reject) => {
       const argsWithPom = ['-f', pomPath, ...args];
 
+      this.logger.debug('Executing maven: /usr/bin/mvn', ...argsWithPom);
+
       this.activeProcess = childProcess.execFile(
         '/usr/bin/mvn',
         argsWithPom,
         options,
         (error, stdout, stderr) => {
           if (error) {
-            vscode.window.showErrorMessage('Failed to execute formatting');
+            this.logger.error(`Maven execution failed: ${stdout}`);
             reject(error);
           } else {
+            this.logger.trace('Maven execution completed');
             resolve({ stdout, stderr });
           }
         }
@@ -66,6 +72,7 @@ class ChildProcessExecutor implements MavenExecutor, vscode.Disposable {
       } else {
         this.activeProcess.stdin.write(stdin);
         this.activeProcess.stdin.end();
+        this.logger.trace('Wrote document to Maven stdin');
       }
     });
   }

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import MavenExecutor from './maven/mavenExecutor';
 import CancellationTokenPromise from './cancellationTokenPromise';
+import Logger from './logger';
 
 const SPOTLESS_STATUS_IS_CLEAN = 'IS CLEAN';
 const SPOTLESS_STATUS_DID_NOT_CONVERGE = 'DID NOT CONVERGE';
@@ -14,7 +15,10 @@ const SPOTLESS_STATUSES = [
 ];
 
 class Spotless {
-  constructor(private readonly mavenExecutor: MavenExecutor) {}
+  constructor(
+    private readonly mavenExecutor: MavenExecutor,
+    private readonly logger: Logger
+  ) {}
 
   public async run(
     document: vscode.TextDocument,
@@ -33,7 +37,7 @@ class Spotless {
       '--quiet',
     ];
 
-    console.log(`Running spotless:apply on ${basename}`);
+    this.logger.info(`Running spotless:apply on ${basename}`);
 
     const { stdout, stderr } = await this.mavenExecutor.runPluginGoal({
       documentLocation: document.uri,
@@ -45,14 +49,14 @@ class Spotless {
     });
 
     if (cancellationToken.isCancellationRequested) {
-      console.warn('Spotless formatting cancelled');
+      this.logger.warning('Spotless formatting cancelled');
       return null;
     }
 
     const trimmedStdErr = stderr.trim();
 
     if (SPOTLESS_STATUSES.includes(trimmedStdErr)) {
-      console.log(`${basename}: ${trimmedStdErr}`);
+      this.logger.debug(`${basename}: ${trimmedStdErr}`);
     }
 
     if (trimmedStdErr === SPOTLESS_STATUS_IS_DIRTY) {
