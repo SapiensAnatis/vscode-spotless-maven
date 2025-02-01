@@ -12,6 +12,8 @@ export async function activate(
     vscode.window.createOutputChannel('Spotless for Maven', { log: true })
   );
 
+  logger.info('Extension initialised');
+
   const executor = new ChildProcessExecutor(logger);
   const spotless = new Spotless(executor, logger);
 

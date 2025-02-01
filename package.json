@@ -3,8 +3,12 @@
   "displayName": "Spotless Maven",
   "description": "Format your source files using Spotless via Maven",
   "version": "0.0.1",
+  "publisher": "SapiensAnatis",
+  "repository": {
+    "url": "https://github.com/SapiensAnatis/vscode-spotless-maven"
+  },
   "engines": {
-    "vscode": "1.96.4"
+    "vscode": "^1.96.1"
   },
   "categories": [
     "Other"
@@ -22,6 +26,7 @@
     ]
   },
   "scripts": {
+    "vsce:package": "vsce package --no-dependencies",
     "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
