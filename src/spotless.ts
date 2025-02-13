@@ -3,6 +3,7 @@ import * as path from 'path';
 import MavenExecutor from './maven/mavenExecutor';
 import CancellationTokenPromise from './cancellationTokenPromise';
 import Logger from './logger';
+import getPomPath from './maven/getPomPath';
 
 const SPOTLESS_STATUS_IS_CLEAN = 'IS CLEAN';
 const SPOTLESS_STATUS_DID_NOT_CONVERGE = 'DID NOT CONVERGE';
@@ -24,43 +25,43 @@ class Spotless implements vscode.Disposable {
     document: vscode.TextDocument,
     cancellationToken: vscode.CancellationToken
   ): Promise<string | null> {
-    const cancellationPromise = new CancellationTokenPromise(cancellationToken);
-
     const basename = path.basename(document.uri.fsPath);
-    const docPath = document.uri.fsPath;
-
-    const args = [
-      `-DspotlessIdeHook=${docPath}`,
-      '-DspotlessIdeHookUseStdIn',
-      '-DspotlessIdeHookUseStdOut',
-      // '--no-configuration-cache',
-      '--quiet',
-    ];
 
     this.logger.info(`Running spotless:apply on ${basename}`);
 
-    const { stdout, stderr } = await this.mavenExecutor.runPluginGoal({
-      documentLocation: document.uri,
-      plugin: 'spotless',
-      goal: 'apply',
-      goalArgs: args,
-      stdin: document.getText(),
-      cancellationToken: cancellationToken,
-    });
+    // TODO multi-POM support: take account of nearest pom to document
+    const pomUri = await getPomPath();
+
+    if (!pomUri) {
+      this.logger.error('No Maven project found.');
+      throw new Error('No Maven project found.');
+    }
+
+    this.logger.info(`Using maven project: ${pomUri}`);
+
+    const { formattedDocumentText, spotlessStatus } =
+      await this.mavenExecutor.runSpotlessApply({
+        pomUri,
+        documentUri: document.uri,
+        documentText: document.getText(),
+        cancellationToken: cancellationToken,
+      });
+
+    console.log({ formattedDocumentText, spotlessStatus });
 
     if (cancellationToken.isCancellationRequested) {
       this.logger.warning('Spotless formatting cancelled');
       return null;
     }
 
-    const trimmedStdErr = stderr.trim();
+    const trimmedStdErr = spotlessStatus.trim();
 
     if (SPOTLESS_STATUSES.includes(trimmedStdErr)) {
       this.logger.debug(`${basename}: ${trimmedStdErr}`);
     }
 
     if (trimmedStdErr === SPOTLESS_STATUS_IS_DIRTY) {
-      return stdout;
+      return formattedDocumentText;
     } else if (trimmedStdErr === SPOTLESS_STATUS_IS_CLEAN) {
       return null;
     }

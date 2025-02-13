@@ -32,11 +32,11 @@ class ConfigurationProperty<TValue> {
 }
 
 class ConfigurationProvider implements vscode.Disposable {
-  private useMvnd = new ConfigurationProperty<boolean>('useMvnd', false);
-  private mvndPath = new ConfigurationProperty<string>(
-    'mvndPath',
-    '/usr/bin/mvnd'
-  );
+  private properties = {
+    mvnPath: new ConfigurationProperty<string>('mvnPath', '/usr/bin/mvn'),
+    useMvnd: new ConfigurationProperty<boolean>('useMvnd', false), // TODO: changing this should prompt to reload the window as we only read it on startup
+    mvndPath: new ConfigurationProperty<string>('mvndPath', '/usr/bin/mvnd'),
+  };
 
   private subscriptionListener: vscode.Disposable;
 
@@ -46,12 +46,16 @@ class ConfigurationProvider implements vscode.Disposable {
     );
   }
 
+  public getMvnPath(): string {
+    return this.properties.mvnPath.getValue();
+  }
+
   public getUseMvnd(): boolean {
-    return this.useMvnd.getValue();
+    return this.properties.useMvnd.getValue();
   }
 
   public getMvndPath(): string {
-    return this.mvndPath.getValue();
+    return this.properties.mvndPath.getValue();
   }
 
   public dispose(): void {
@@ -59,8 +63,9 @@ class ConfigurationProvider implements vscode.Disposable {
   }
 
   private onConfigurationChange(event: vscode.ConfigurationChangeEvent): void {
-    this.useMvnd.onConfigurationChange(event);
-    this.mvndPath.onConfigurationChange(event);
+    for (const configProperty of Object.values(this.properties)) {
+      configProperty.onConfigurationChange(event);
+    }
   }
 }
 

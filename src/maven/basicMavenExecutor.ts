@@ -1,14 +1,12 @@
-import * as vscode from 'vscode';
 import MavenExecutor, {
   MavenExecutionArgs,
   MavenExecutionResult,
 } from './mavenExecutor';
-import getPomPath from './getPomPath';
 import * as childProcess from 'child_process';
 import Logger from '../logger';
 import ConfigurationProvider from '../configurationProvider';
 
-class ChildProcessExecutor implements MavenExecutor {
+class BasicMavenExecutor implements MavenExecutor {
   private activeProcess: childProcess.ChildProcess | null = null;
 
   constructor(
@@ -16,37 +14,38 @@ class ChildProcessExecutor implements MavenExecutor {
     private logger: Logger
   ) {}
 
-  public async runPluginGoal({
-    documentLocation,
-    plugin,
-    goal,
-    goalArgs,
-    stdin,
+  public async runSpotlessApply({
+    pomUri,
+    documentUri,
+    documentText,
     cancellationToken,
   }: MavenExecutionArgs): Promise<MavenExecutionResult> {
-    // TODO multi-POM support: take account of nearest pom to document
-    const pomUri = await getPomPath();
-
-    if (!pomUri) {
-      this.logger.error('No Maven project found.');
-      throw new Error('No Maven project found.');
-    }
-
-    this.logger.info(`Using maven project: ${pomUri}`);
-
     const ac = new AbortController();
     cancellationToken.onCancellationRequested(() =>
       ac.abort('cancellationToken')
     );
 
-    const args = [`${plugin}:${goal}`, ...goalArgs];
-    return await this.runMaven(pomUri.fsPath, args, stdin, {
-      signal: ac.signal,
-    });
+    const args = [
+      'spotless:apply',
+      `-DspotlessIdeHook=${documentUri.fsPath}`,
+      '-DspotlessIdeHookUseStdIn',
+      '-DspotlessIdeHookUseStdOut',
+      '--quiet',
+    ];
+
+    const { stdout, stderr } = await this.runMaven(
+      pomUri.fsPath,
+      args,
+      documentText,
+      {
+        signal: ac.signal,
+      }
+    );
+
+    return { formattedDocumentText: stdout, spotlessStatus: stderr };
   }
 
   public dispose(): void {
-    // Unsure if this is correct
     if (this.activeProcess && this.activeProcess.exitCode === null) {
       this.activeProcess.disconnect();
     }
@@ -57,11 +56,9 @@ class ChildProcessExecutor implements MavenExecutor {
     args: string[],
     stdin: string,
     options: childProcess.ExecFileOptions
-  ): Promise<MavenExecutionResult> {
+  ): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
-      const mvnCommand = this.configurationProvider.getUseMvnd()
-        ? this.configurationProvider.getMvndPath()
-        : 'mvn';
+      const mvnCommand = this.configurationProvider.getMvnPath();
 
       const argsWithPom = ['-f', pomPath, ...args];
 
@@ -97,4 +94,4 @@ class ChildProcessExecutor implements MavenExecutor {
   }
 }
 
-export default ChildProcessExecutor;
+export default BasicMavenExecutor;

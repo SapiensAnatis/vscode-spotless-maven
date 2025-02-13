@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import getPomPath from './maven/getPomPath';
 import Spotless from './spotless';
-import ChildProcessExecutor from './maven/childProcessExecutor';
+import BasicMavenExecutor from './maven/basicMavenExecutor';
+import DaemonMavenExecutor from './maven/daemonMavenExecutor';
 import DocumentFormattingEditProvider from './documentFormattingEditProvider';
 import Logger from './logger';
 import ConfigurationProvider from './configurationProvider';
@@ -17,7 +17,10 @@ export async function activate(
 
   const configurationProvider = new ConfigurationProvider();
 
-  const executor = new ChildProcessExecutor(configurationProvider, logger);
+  const executor = configurationProvider.getUseMvnd()
+    ? new DaemonMavenExecutor(configurationProvider, logger)
+    : new BasicMavenExecutor(configurationProvider, logger);
+
   const spotless = new Spotless(executor, logger);
 
   const formatDocumentSelector: vscode.DocumentFilter[] = [
