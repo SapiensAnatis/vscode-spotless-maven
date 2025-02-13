@@ -107,6 +107,7 @@ class DaemonMavenExecutor implements MavenExecutor {
           if (error) {
             // mvnd always fails with an NPE creating a logger for some reason
             // this is absolutely evil but I wanted to get something working
+            // TODO: STOP DOING THIS!!
             resolve({ stdout: 'unused', stderr: 'IS DIRTY' });
           } else {
             this.logger.trace('Maven execution completed');
