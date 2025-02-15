@@ -47,8 +47,6 @@ class DaemonMavenExecutor implements MavenExecutor {
       '-f',
       pomUri.fsPath,
       `-DspotlessIdeHook=${tempFilePath}`,
-      // stdout also seems problematic for reasons that are less clear - NPE trying to create a logger
-      // '-DspotlessIdeHookUseStdOut',
       '--quiet',
     ];
 
@@ -99,14 +97,17 @@ class DaemonMavenExecutor implements MavenExecutor {
         options,
         (error, stdout, stderr) => {
           if (error) {
-            // mvnd always fails with an NPE creating a logger for some reason
-            // this is absolutely evil but I wanted to get something working
-            // TODO: STOP DOING THIS!!
+            /* Even with the file I/O compromise, mvnd exhibits strange behaviour when using -DspotlessIdeHook.
+             * It will write to the file with the correct formatted contents, but then crash with an NPE while
+             * cleaning up.
+             * To work around this we always report IS DIRTY (since we can't access the status from stderr)
+             * TODO: this is awful, see if this can be fixed in mvnd or spotless
+             */
+            this.logger.error('mvnd execution failed\n' + stdout);
             resolve({
               stdout: 'ignored as we read the file',
               stderr: 'IS DIRTY',
             });
-            reject('mvnd execution failed. Check the logs for more details.');
           } else {
             this.logger.trace('Maven execution completed');
             resolve({ stdout, stderr });
