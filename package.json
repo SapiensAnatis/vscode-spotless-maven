@@ -2,7 +2,7 @@
   "name": "vscode-spotless-maven",
   "displayName": "Spotless Maven",
   "description": "Format your source files using Spotless via Maven",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "SapiensAnatis",
   "repository": {
     "url": "https://github.com/SapiensAnatis/vscode-spotless-maven"
