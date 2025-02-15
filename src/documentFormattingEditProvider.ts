@@ -27,6 +27,8 @@ class DocumentFormattingEditProvider
     token: vscode.CancellationToken
   ): Promise<vscode.TextEdit[]> {
     try {
+      this.logger.debug('Starting formatting');
+
       const spotlessChanges = await this.spotless.run(document, token);
 
       if (!spotlessChanges) {
@@ -37,6 +39,7 @@ class DocumentFormattingEditProvider
         document.positionAt(0),
         document.positionAt(document.getText().length)
       );
+
       this.logger.info('Formatting completed');
 
       return [new vscode.TextEdit(range, spotlessChanges)];
