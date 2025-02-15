@@ -24,12 +24,17 @@
         "spotlessMaven.useMvnd": {
           "type": "boolean",
           "default": false,
-          "description": "Use mvnd instead of mvn for faster formatting. Requires mvnd to be installed and present on your $PATH."
+          "description": "Use mvnd instead of mvn for faster formatting. Requires mvnd to be installed and present on your PATH, or specified via spotlessMaven.mvndPath. This is VERY experimental, your results may vary."
+        },
+        "spotlessMaven.mvnPath": {
+          "type": "string",
+          "default": "/usr/bin/mvn",
+          "description": "Path to the mvn executable to use. Leave blank to find in PATH."
         },
         "spotlessMaven.mvndPath": {
           "type": "string",
           "default": "/usr/bin/mvnd",
-          "description": "Path to the mvnd executable to use."
+          "description": "Path to the mvnd executable to use. Leave blank to find in PATH."
         }
       }
     }
