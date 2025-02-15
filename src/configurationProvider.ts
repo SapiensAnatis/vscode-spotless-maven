@@ -1,18 +1,23 @@
 import * as vscode from 'vscode';
+import findCommandPath from './maven/findCommandPath';
 
 const CONFIG_NAMESPACE = 'spotlessMaven';
 
 class ConfigurationProperty<TValue> {
-  private value: TValue;
+  private value: TValue | null;
 
   constructor(
-    private propertyName: string,
+    protected propertyName: string,
     private defaultValue: TValue
   ) {
-    this.value = this.loadValue();
+    this.value = null;
   }
 
   public getValue(): TValue {
+    if (!this.value) {
+      this.value = this.loadValue();
+    }
+
     return this.value;
   }
 
@@ -24,18 +29,64 @@ class ConfigurationProperty<TValue> {
     }
   }
 
-  private loadValue(): TValue {
+  protected loadValue(): TValue {
     return vscode.workspace
       .getConfiguration(CONFIG_NAMESPACE)
       .get(this.propertyName, this.defaultValue);
   }
 }
 
+class MavenBinaryPathProperty extends ConfigurationProperty<string | null> {
+  constructor(
+    propertyName: string,
+    private binaryName: 'mvn' | 'mvnd'
+  ) {
+    super(propertyName, null);
+  }
+
+  protected loadValue(): string | null {
+    const configOverride = vscode.workspace
+      .getConfiguration(CONFIG_NAMESPACE)
+      .get(this.propertyName, null);
+
+    if (configOverride) {
+      return configOverride;
+    }
+
+    return findCommandPath(this.binaryName);
+  }
+}
+
+class UseMvndProperty extends ConfigurationProperty<boolean> {
+  constructor() {
+    super('useMvnd', false);
+  }
+
+  public onConfigurationChange(event: vscode.ConfigurationChangeEvent): void {
+    super.onConfigurationChange(event);
+
+    if (
+      event.affectsConfiguration(`${CONFIG_NAMESPACE}.${this.propertyName}`)
+    ) {
+      const reloadWindow = vscode.window.showInformationMessage(
+        'mvnd usage setting changed - please reload the window to apply.',
+        'Reload window'
+      );
+
+      reloadWindow.then((value) => {
+        if (value) {
+          vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+      });
+    }
+  }
+}
+
 class ConfigurationProvider implements vscode.Disposable {
   private properties = {
-    mvnPath: new ConfigurationProperty<string>('mvnPath', '/usr/bin/mvn'),
-    useMvnd: new ConfigurationProperty<boolean>('useMvnd', false), // TODO: changing this should prompt to reload the window as we only read it on startup
-    mvndPath: new ConfigurationProperty<string>('mvndPath', '/usr/bin/mvnd'),
+    mvnPath: new MavenBinaryPathProperty('mvnPath', 'mvn'),
+    useMvnd: new UseMvndProperty(),
+    mvndPath: new MavenBinaryPathProperty('mvndPath', 'mvnd'),
   };
 
   private subscriptionListener: vscode.Disposable;
@@ -46,7 +97,7 @@ class ConfigurationProvider implements vscode.Disposable {
     );
   }
 
-  public getMvnPath(): string {
+  public getMvnPath(): string | null {
     return this.properties.mvnPath.getValue();
   }
 
@@ -54,7 +105,7 @@ class ConfigurationProvider implements vscode.Disposable {
     return this.properties.useMvnd.getValue();
   }
 
-  public getMvndPath(): string {
+  public getMvndPath(): string | null {
     return this.properties.mvndPath.getValue();
   }
 

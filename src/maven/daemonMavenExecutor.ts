@@ -77,25 +77,19 @@ class DaemonMavenExecutor implements MavenExecutor {
     }
   }
 
-  private async writeTempFile(documentText: string): Promise<string> {
-    // TODO: Windows support
-    const folder = TMP_DIR_NAME;
-    fsPromises.mkdir(folder, { recursive: true });
-
-    const filename = randomBytes(16).toString('hex');
-    const path = `${folder}/${filename}`;
-
-    await fsPromises.writeFile(path, documentText);
-
-    return path;
-  }
-
   private async runMaven(
     args: string[],
     options: childProcess.ExecFileOptions
   ): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
       const mvndCommand = this.configurationProvider.getMvndPath();
+
+      if (!mvndCommand) {
+        reject(
+          'Could not find mvnd on the PATH. Set spotlessMaven.mvndPath to specify a custom path if needed.'
+        );
+        return;
+      }
 
       this.logger.trace(`Executing maven daemon: ${mvndCommand}`, ...args);
 
@@ -108,7 +102,11 @@ class DaemonMavenExecutor implements MavenExecutor {
             // mvnd always fails with an NPE creating a logger for some reason
             // this is absolutely evil but I wanted to get something working
             // TODO: STOP DOING THIS!!
-            resolve({ stdout: 'unused', stderr: 'IS DIRTY' });
+            resolve({
+              stdout: 'ignored as we read the file',
+              stderr: 'IS DIRTY',
+            });
+            reject('mvnd execution failed. Check the logs for more details.');
           } else {
             this.logger.trace('Maven execution completed');
             resolve({ stdout, stderr });

@@ -60,6 +60,13 @@ class BasicMavenExecutor implements MavenExecutor {
     return new Promise((resolve, reject) => {
       const mvnCommand = this.configurationProvider.getMvnPath();
 
+      if (!mvnCommand) {
+        reject(
+          'Could not find mvn on the PATH. Set spotlessMaven.mvnPath to specify a custom path if needed.'
+        );
+        return;
+      }
+
       const argsWithPom = ['-f', pomPath, ...args];
 
       this.logger.trace(`Executing maven: ${mvnCommand}`, ...argsWithPom);
@@ -71,7 +78,7 @@ class BasicMavenExecutor implements MavenExecutor {
         (error, stdout, stderr) => {
           if (error) {
             this.logger.error(`Maven execution failed: ${stdout}`);
-            reject(error);
+            reject('mvn execution failed. Check the logs for more details.');
           } else {
             this.logger.trace('Maven execution completed');
             resolve({ stdout, stderr });
