@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import MavenExecutor from './maven/mavenExecutor';
-import CancellationTokenPromise from './cancellationTokenPromise';
 import Logger from './logger';
 import getPomPath from './maven/getPomPath';
 
