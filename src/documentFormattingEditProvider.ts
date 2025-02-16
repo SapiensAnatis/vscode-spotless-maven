@@ -44,7 +44,18 @@ class DocumentFormattingEditProvider
 
       return [new vscode.TextEdit(range, spotlessChanges)];
     } catch (e) {
-      this.logger.error(`Unable to apply formatting: ${(e as Error).message}`);
+      if (typeof e === 'string') {
+        vscode.window.showErrorMessage(`Failed to apply formatting: ${e}`);
+      } else if (e instanceof Error) {
+        vscode.window.showErrorMessage(
+          `Failed to apply formatting: ${e.message}`
+        );
+      } else {
+        vscode.window.showErrorMessage(
+          'Failed to apply formatting: unknown error'
+        );
+      }
+
       return [];
     }
   }
