@@ -39,6 +39,7 @@ class BasicMavenExecutor implements MavenExecutor {
       documentText,
       {
         signal: ac.signal,
+        shell: process.platform === 'win32', // mvn is a script, which is blocked from execFile on Windows unless `shell` is true
       }
     );
 
@@ -77,7 +78,7 @@ class BasicMavenExecutor implements MavenExecutor {
         options,
         (error, stdout, stderr) => {
           if (error) {
-            this.logger.error(`Maven execution failed: ${stdout}`);
+            this.logger.error('Maven execution failed:\n' + stdout);
             reject('mvn execution failed. Check the logs for more details.');
           } else {
             this.logger.trace('Maven execution completed');

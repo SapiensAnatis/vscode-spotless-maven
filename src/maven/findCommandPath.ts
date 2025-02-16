@@ -14,9 +14,12 @@ function findCommandPathUnix(commandName: 'mvn' | 'mvnd'): string | null {
 
 function findCommandPathWindows(commandName: 'mvn' | 'mvnd'): string | null {
   try {
-    return childProcess.execSync(`where.exe ${commandName}`, {
+    const whereResult = childProcess.execSync(`where.exe ${commandName}`, {
       encoding: 'utf-8',
     });
+
+    // where.exe can return multiple results, delimeted by a CRLF
+    return whereResult.split('\r\n')[0];
   } catch (e) {
     return null;
   }

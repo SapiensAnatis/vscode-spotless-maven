@@ -1,4 +1,4 @@
 {
-    "spotlessMaven.useMvnd": true,
+    "spotlessMaven.useMvnd": false, 
     "spotlessMaven.mvndPath": "/home/jay/Projects/maven-mvnd/dist/target/maven-mvnd-2.0.0-rc-3-SNAPSHOT-linux-amd64/bin/mvnd"
 }
